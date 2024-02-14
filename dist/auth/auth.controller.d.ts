@@ -1,4 +1,5 @@
 import { AuthService } from './auth.service';
+import { UserRole } from './roles.enum';
 export declare class AuthController {
     private readonly authService;
     constructor(authService: AuthService);
@@ -6,6 +7,7 @@ export declare class AuthController {
         username: string;
         password: string;
         email: string;
+        role?: UserRole;
     }): Promise<{
         access_token: string;
     }>;

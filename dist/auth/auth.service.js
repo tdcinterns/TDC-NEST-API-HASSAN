@@ -14,12 +14,13 @@ const common_1 = require("@nestjs/common");
 const jwt_1 = require("@nestjs/jwt");
 const bcrypt = require("bcrypt");
 const prisma_service_1 = require("../prisma/prisma.service");
+const roles_enum_1 = require("./roles.enum");
 let AuthService = class AuthService {
     constructor(prismaService, jwtService) {
         this.prismaService = prismaService;
         this.jwtService = jwtService;
     }
-    async signup({ username, password, email }) {
+    async signup({ username, password, email, role }) {
         const hashedPassword = await bcrypt.hash(password, 10);
         const existingUser = await this.prismaService.prisma().user.findFirst({
             where: { email },
@@ -32,9 +33,10 @@ let AuthService = class AuthService {
                 username,
                 password: hashedPassword,
                 email,
+                role: role || roles_enum_1.UserRole.USER,
             },
         });
-        return this.login(user);
+        return this.login({ username, password });
     }
     async login({ username, password }) {
         const user = await this.prismaService.prisma().user.findFirst({
@@ -43,7 +45,7 @@ let AuthService = class AuthService {
         if (!user || !(await bcrypt.compare(password, user.password))) {
             throw new common_1.UnauthorizedException('Invalid username or password.');
         }
-        const payload = { sub: user.id, username: user.username };
+        const payload = { sub: user.id, username: user.username, role: user.role || roles_enum_1.UserRole.USER };
         return {
             access_token: this.jwtService.sign(payload),
         };
